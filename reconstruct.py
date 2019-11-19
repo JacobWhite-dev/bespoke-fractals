@@ -111,7 +111,7 @@ def main(argv):
 
         # Save the output image
         slice = nib.Nifti1Image(newImage, np.eye(4))
-        outname = (imageType[outputIndex] + outputPrefix + str(case).zfill(3) + "_slice_" + str(sliceIndex) + ".nii.gz")
+        outname = (outpath + outputPrefix + str(case).zfill(3) + "_slice_" + str(sliceIndex) + ".nii.gz")
         slice.to_filename(outname)
         count += 1
     

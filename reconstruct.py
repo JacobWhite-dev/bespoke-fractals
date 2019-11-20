@@ -90,20 +90,28 @@ def main(argv):
 
         # Get the numpy array version of the image
         data = img.get_data() #numpy array without orientation
-        channels, lx, ly = data.shape
+        if len(data.shape) == 3:
+            channels, lx, ly = data.shape
+        elif len(data.shape) == 2:
+            lx, ly = data.shape
+            channels = 1
+        else:
+            print("Unknown image shape.")
+            sys.exit()
+
         print("Image shape:", data.shape)
     
         # 2D FFT
         newImage = np.zeros((lx, ly), dtype = complex)
 
-        # Combine the data from each channel
-        for channel in range(0, channels):
-            newImageSlice = fftpack.ifftshift(fftpack.
-                                                ifft2(np.
-                                                    conjugate(data[channel, 
-                                                                    :, :])))
-            newImage += (newImageSlice ** 2)
-#           break
+        if channels > 1:
+            # Combine the data from each channel
+            for channel in range(0, channels):
+                newImageSlice = fftpack.fftshift(fftpack.ifft2(fftpack.ifftshift(np.fliplr(np.flipud(data[channel, :, :])))))
+                newImage += (newImageSlice ** 2)
+    #           break
+        else:
+            newImage[:, :] = fftpack.fftshift(fftpack.ifft2(fftpack.ifftshift(np.fliplr(np.flipud(data[:, :])))))
 
         if not complexOutput:
             newImage = np.absolute(newImage)

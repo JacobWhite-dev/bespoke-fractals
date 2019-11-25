@@ -26,6 +26,8 @@ def main(argv):
     # Default values
     complexOutput = 1 # Flag for if final image can have complex values
     caseIndex = 0     # Index of case number in filenames
+    path = "./"
+    outpath = "./"
 
     # Get arguments
     try:

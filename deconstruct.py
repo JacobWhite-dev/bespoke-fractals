@@ -93,9 +93,7 @@ def main(argv):
         # 2D FFT
         newImage = np.zeros((lx, ly), dtype = complex)
 
-        newImage[:, :] = fftpack.fftshift(fftpack.
-                                            fft2(np.
-                                                conjugate(data[:, :])))
+        newImage[:, :] = fftpack.fftshift(fftpack.fft2(fftpack.ifftshift(data[:, :])))
 
         if not complexOutput:
             newImage = np.absolute(newImage)

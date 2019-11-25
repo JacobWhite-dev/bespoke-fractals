@@ -107,11 +107,11 @@ def main(argv):
         if channels > 1:
             # Combine the data from each channel
             for channel in range(0, channels):
-                newImageSlice = fftpack.fftshift(fftpack.ifft2(fftpack.ifftshift(np.fliplr(np.flipud(data[channel, :, :])))))
+                newImageSlice = fftpack.fftshift(fftpack.ifft2(fftpack.ifftshift(data[channel, :, :])))
                 newImage += (newImageSlice ** 2)
     #           break
         else:
-            newImage[:, :] = fftpack.fftshift(fftpack.ifft2(fftpack.ifftshift(np.fliplr(np.flipud(data[:, :])))))
+            newImage[:, :] = fftpack.fftshift(fftpack.ifft2(fftpack.ifftshift(data[:, :])))
 
         if not complexOutput:
             newImage = np.absolute(newImage)

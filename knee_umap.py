@@ -19,7 +19,7 @@ import umap
 import filenames
 
 path = 'D:\\Winter Research\\Data\\NYU Stanford Knee\\slices'
-slices = '127'
+slices = '100'
 caseIndex = 0
 
 imageList, caseList = filenames.getSortedFileListAndCases(path, caseIndex, 

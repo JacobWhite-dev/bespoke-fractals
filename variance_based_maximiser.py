@@ -100,7 +100,7 @@ for image, case in zip(imageList, caseList):
     print('Loaded', image)
     
     data = img.get_data()
-    images[count, :, :] = data
+    images[count, :, :] = np.absolute(data)
     count = count + 1
 
 # Perform the thing
@@ -114,47 +114,47 @@ traces = np.zeros(102400)
 #images = normalise_images(images)
 images = normalise_images2(images)
 
-## Try specific patterns:
-#uniform = np.ones([320, 320])
+# Try specific patterns:
+uniform = np.ones([320, 320])
 
-#N = 320    # Dimension of fractal 
-#K = 2.25   # Reduction factor
+N = 320    # Dimension of fractal 
+K = 2.25   # Reduction factor
 
-## Setup fractal
-#lines, angles, \
-#    mValues, fractal, \
-#    oversampling = finite.finiteFractal(N, K, sortBy='Euclidean', 
-#                                        twoQuads=True)
-#mu = len(lines)
-## Tile center region further
-#radius = N/8
-#centerX = N/2
-#centerY = N/2
-#count = 0
-#fractal = fftpack.fftshift(fractal)
-#for i, row in enumerate(fractal):
-#    for j, col in enumerate(row):
-#        distance = math.sqrt( (i-float(centerX))**2 + (j-float(centerY))**2)
-#        if distance < radius:
-#            if not fractal[i, j] > 0: #already selected
-#                count += 1
-#                fractal[i, j] = 1
-#fractal = fftpack.fftshift(fractal)
-#totalSamples = mu*(N-1)+count+1
-#actualR = float(totalSamples/N**2)
-#print("Number of total sampled points:", totalSamples)
-#print("Actual Reduction factor:", actualR)
+# Setup fractal
+lines, angles, \
+    mValues, fractal, \
+    oversampling = finite.finiteFractal(N, K, sortBy='Euclidean', 
+                                        twoQuads=True)
+mu = len(lines)
+# Tile center region further
+radius = N/8
+centerX = N/2
+centerY = N/2
+count = 0
+fractal = fftpack.fftshift(fractal)
+for i, row in enumerate(fractal):
+    for j, col in enumerate(row):
+        distance = math.sqrt( (i-float(centerX))**2 + (j-float(centerY))**2)
+        if distance < radius:
+            if not fractal[i, j] > 0: #already selected
+                count += 1
+                fractal[i, j] = 1
+fractal = fftpack.fftshift(fractal)
+totalSamples = mu*(N-1)+count+1
+actualR = float(totalSamples/N**2)
+print("Number of total sampled points:", totalSamples)
+print("Actual Reduction factor:", actualR)
 
-#random = (np.random.rand(320, 320)).round()
+random = (np.random.rand(320, 320)).round()
 
 #det, trace = pattern_score(images, uniform)
 #print("Uniform - Det: {} Trace: {}".format(det, trace))
-#det, trace = pattern_score(images, random)
-#print("Random - Det: {} Trace: {}".format(det, trace))
-#det, trace = pattern_score(images, fractal)
-#print("Fractal - Det: {} Trace: {}".format(det, trace))
+det, trace = pattern_score(images, random)
+print("Random - Det: {} Trace: {}".format(det, trace))
+det, trace = pattern_score(images, fractal)
+print("Fractal - Det: {} Trace: {}".format(det, trace))
 
-#exit()
+exit()
 
 for i in range(102400):
     startingPoint[i] = 1

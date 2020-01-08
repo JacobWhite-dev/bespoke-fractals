@@ -87,13 +87,24 @@ def computeKatzLines(kSpace, anglesSorted, finiteAnglesSorted, K, centered = Tru
         #second quadrant
         if twoQuads:
             if m != 0 and m != N: #dont repeat these
-                m = N-m
+                #m = N-m
+                #u, v = radon.getSliceCoordinates2(m, kSpace, centered)
+                #lines.append((u,v))
+                #mValues.append(m)
+                #p, q = farey.get_pq(angle)
+                #newAngle = farey.farey(-p,q) #not confirmed - SWAPPED P AND Q
+                #angles.append(newAngle)
+
+                p, q = farey.get_pq(angle)
+                newAngle = farey.farey(-q,p) #not confirmed - SWAPPED P AND Q
+                angles.append(newAngle)
+                m, inv = farey.toFinite(newAngle, N)
                 u, v = radon.getSliceCoordinates2(m, kSpace, centered)
                 lines.append((u,v))
                 mValues.append(m)
-                p, q = farey.get_pq(angle)
-                newAngle = farey.farey(-p,q) #not confirmed
-                angles.append(newAngle)
+                
+
+
     
     return lines, angles, mValues
 
@@ -135,6 +146,7 @@ def computeKatzLinesSubsets(s, kSpace, anglesSorted, finiteAnglesSorted, K, cent
                 subsetsMValues[subsetIndex].append(m)
                 p, q = farey.get_pq(angle)
                 newAngle = farey.farey(-p,q) #not confirmed
+                #newAngle = farey.farey(p, -q) #not confirmed
                 subsetsAngles[subsetIndex].append(newAngle)
                 angles.append(newAngle)
                 

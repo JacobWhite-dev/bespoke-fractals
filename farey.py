@@ -2,7 +2,7 @@
 '''
 This is the Farey class. Generate Farey/Haros series as vectors (q/p).
 The vector is stored as complex numbers with the imaginary part as p.
-The cordinate system is assumed to be matrix system with p (and hence x) along the rows.
+The coordinate system is assumed to be matrix system with p (and hence x) along the rows.
 '''
 import math
 import numbertheory as nt #local modules
@@ -132,7 +132,7 @@ class Farey:
     '''
     Class for the Farey vectors. It uses Gaussian integers to represent them.
     
-    Conventions used in theis class:
+    Conventions used in this class:
     Farey fraction p/q is represented as a vector (q, p) in (x, y) coordinates
     '''
     #static constants
@@ -393,6 +393,18 @@ class Farey:
         '''
         self.compact = False
     
+    def sortCustom(self, operator):
+        norms = []
+        for vector in self.vectors:
+            p, q = get_pq(vector)
+            norm = operator(p, q)
+            norms.append(norm)
+
+        if not self.finiteAngles:
+            return [x for (n,x) in sorted(zip(norms,self.vectors), key=lambda pair: pair[0])]
+        else:
+            return [y for (n,y,x) in sorted(zip(norms,self.finiteAngles,self.vectors), key=lambda pair: pair[0])], [x for (n,y,x) in sorted(zip(norms,self.finiteAngles,self.vectors), key=lambda pair: pair[0])]
+
     def sort(self, type='length'):
         '''
         Returns sorted vectors and finite angles (if finite vectors have been computed).

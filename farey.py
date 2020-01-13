@@ -333,7 +333,8 @@ class Farey:
         '''
         if not self.generated:
             self.generate(N, 4)
-            
+            #self.generate(N, 5)
+
         del self.finiteAngles[:] #clear list
         for vector in self.vectors:
             if vector.real == 0:

@@ -87,14 +87,17 @@ def computeKatzLines(kSpace, anglesSorted, finiteAnglesSorted, K, centered = Tru
         #second quadrant
         if twoQuads:
             if m != 0 and m != N: #dont repeat these
+
+                # Reflective symmetry
                 #m = N-m
                 #u, v = radon.getSliceCoordinates2(m, kSpace, centered)
                 #lines.append((u,v))
                 #mValues.append(m)
                 #p, q = farey.get_pq(angle)
-                #newAngle = farey.farey(-p,q) #not confirmed - SWAPPED P AND Q
+                #newAngle = farey.farey(-p,q) #not confirmed
                 #angles.append(newAngle)
 
+                # Rotational symmetry
                 p, q = farey.get_pq(angle)
                 newAngle = farey.farey(-q,p) #not confirmed - SWAPPED P AND Q
                 angles.append(newAngle)
@@ -103,9 +106,6 @@ def computeKatzLines(kSpace, anglesSorted, finiteAnglesSorted, K, centered = Tru
                 lines.append((u,v))
                 mValues.append(m)
                 
-
-
-    
     return lines, angles, mValues
 
 def computeKatzLinesSubsets(s, kSpace, anglesSorted, finiteAnglesSorted, K, centered = True, twoQuads = False):

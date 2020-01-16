@@ -64,6 +64,60 @@ def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, 
     fareyVectors.compactOn()
     fareyVectors.generateFiniteWithCoverage(N)
     #fareyVectors.generateFinite(N)
+    print(fareyVectors.vectors)
+    
+    #sort to reorder result for prettier printing
+    finiteAnglesSorted, anglesSorted = fareyVectors.sortCustom(sortBy)
+    
+    ## Rotate the whole fractal
+    #anglesSorted = [angle * P2R(1, 63) for angle in anglesSorted]
+    #for index in range(len(anglesSorted)):
+    #    angle = anglesSorted[index]
+    #    p = np.imag(angle)
+    #    q = np.real(angle)
+    #    p = p + N if p < 0 else p
+    #    q = q + N if q < 0 else q
+
+    #    anglesSorted[index] = q + 1j * p
+
+    #print(anglesSorted)
+ 
+    #finiteAnglesSorted = [farey.toFinite(angle, N) for angle in anglesSorted]
+
+    kSpace = np.zeros((N,N))
+    lines, angles, mValues = finite.computeKatzLines(kSpace, anglesSorted, finiteAnglesSorted, K, centered, twoQuads)
+    mu = len(lines)
+    print("Number of finite lines in fractal:", mu)
+    
+    samplesImage1 = np.zeros((N,N), np.float32)
+    for line in lines:
+        u, v = line
+
+        for x, y in zip(u, v):
+            
+            # Rotate
+            #[x, y] = rotate(30, np.array([[x], [y]]))
+            #x = int(x) % N
+            #y = int(y) % N
+
+            samplesImage1[x, y] += 1
+    #determine oversampling because of power of two size
+    #this is fixed for choice of M and m values
+    oversamplingFilter = np.zeros((N,N), np.uint32)
+    onesSlice = np.ones(N, np.uint32)
+    for m in mValues:
+        radon.setSlice(m, oversamplingFilter, onesSlice, 2)
+    oversamplingFilter[oversamplingFilter==0] = 1
+    samplesImage1 /= oversamplingFilter
+#    samplesImage1 = fftpack.fftshift(samplesImage1)
+    
+    return lines, angles, mValues, samplesImage1, oversamplingFilter
+
+def myFiniteFractal2(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, centered=False):
+    fareyVectors = farey.Farey()        
+    fareyVectors.compactOn()
+    fareyVectors.generate(N, octants = 1)  # Just give me one octant
+    fareyVectors.generateFiniteWithCoverage(N)
     
     #sort to reorder result for prettier printing
     finiteAnglesSorted, anglesSorted = fareyVectors.sortCustom(sortBy)
@@ -168,10 +222,16 @@ def new(p,q):
     #return p * q
     return rotated_diamond(p, q)
 
+def spiral(p, q):
+    return abs(1 - math.exp(math.atan2(q, p)))
+
+def conc(p, q):
+    return math.sqrt(math.pow(p, 2) + math.pow(q, 2)) % 6
+
 #print(get_farey_index(1, 1, 4))
 #exit()
 
-N = 1024
+N = 1025
 K = 1
 
 def novel_frac():
@@ -200,20 +260,20 @@ l3 = lambda p,q: (math.pow((p), 0.5) + math.pow((q), 0.5))
 lines, angles, mValues, fractal, overSamplingFilter = myFiniteFractal(N, K, sortBy = rotated_diamond, twoQuads = True)
 
 # Tile center region further
-radius = N/250
-centerX = N/2   
-centerY = N/2
-count = 0
+#radius = N/250
+#centerX = N/2   
+#centerY = N/2
+#count = 0
 fractal = fftpack.fftshift(fractal)
-for i, row in enumerate(fractal):
-    for j, col in enumerate(row):
-        distance = rotated_diamond(i - float(centerX), j - float(centerY))
-        #distance = math.sqrt( (i-float(centerX))**2 + (j-float(centerY))**2)
-        if distance < radius:
-            if not fractal[i, j] > 0: #already selected
-                count += 1
-                #fractal[i, j] = 1
-#fractal = fftpack.fftshift(fractal)
+#for i, row in enumerate(fractal):
+#    for j, col in enumerate(row):
+#        distance = rotated_diamond(i - float(centerX), j - float(centerY))
+#        #distance = math.sqrt( (i-float(centerX))**2 + (j-float(centerY))**2)
+#        if distance < radius:
+#            if not fractal[i, j] > 0: #already selected
+#                count += 1
+#                #fractal[i, j] = 1
+##fractal = fftpack.fftshift(fractal)
 
 plt.imshow(fractal)
 plt.show()

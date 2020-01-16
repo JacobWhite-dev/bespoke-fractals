@@ -82,6 +82,7 @@ def toFinite(fareyVector, N):
     '''
     p, q = get_pq(fareyVector)
     coprime = nt.is_coprime(abs(q), N)
+    #coprime = nt.is_coprime(q % N, N)   # WHY NOT THIS?
     prime = 1
     if N%2 == 0: #dyadic
         prime = 2
@@ -108,7 +109,7 @@ def toFinite(fareyVector, N):
     return mValue, inv
     
 def finiteTranslateOffset(fareyVector, N, P, Q):
-    '''
+    ''' 
     Translate offset required when mapping Farey vectors to finite angles
     Returns translate offset and perp Boolean flag pair
     '''
@@ -333,7 +334,7 @@ class Farey:
         '''
         if not self.generated:
             self.generate(N, 4)
-            #self.generate(N, 5)
+            #self.generate(N, 5)  # CHANGED FROM ORIGINAL
 
         del self.finiteAngles[:] #clear list
         for vector in self.vectors:
@@ -360,7 +361,7 @@ class Farey:
         count = 0
         vectors = self.vectors[:] #copy list
         finiteAngles = self.finiteAngles[:] #copy list
-        maxAngle = N+1
+        maxAngle = N+1 
         if N%2 == 0: #dyadic       
             maxAngle = int(N+N/2)
         filled = [0]*maxAngle #list of zeros 

@@ -17,7 +17,7 @@ import numpy as np
 ###############################################
 
 @numba.njit()
-def unpack_vec(v, dim = 1):
+def unpack_vec(v, dim = 1, full_cov = False):
     '''
     Extract the mean and covariance matrix from a vector.
 
@@ -33,16 +33,21 @@ def unpack_vec(v, dim = 1):
     '''
 
     # Extract means and variances
-    m = v[:dim].astype(np.float32) # Means for distribution
-    s = v[dim:].astype(np.float32) # Variances for distribution
+    m = v[:dim].astype(np.float64) # Means for distribution
+    s = v[dim:].astype(np.float64) # Variances for distribution
 
     # Construct covariance matrix from variances, assuming covariance
-    # matrix is diagonal
-    S = np.diag(s) # Covariance matric for distribution
+    # matrix is diagonal (full_cov = True) or giving all covariances
+    # (full_cov = True)
+    if full_cov:
+        S = np.reshape(s, (dim, dim)) # Covariance matrix for distribution
+    else:
+        S = np.diag(s) # Covariance matrix for distribution
 
     return m, S
 
-def vec_metric(v0, v1, measure, dim = 1):
+@numba.njit()
+def vec_metric(v0, v1, measure, dim = 1, full_cov = False):
     '''
     Calculate a given measure between two normal distributions.
 
@@ -60,8 +65,8 @@ def vec_metric(v0, v1, measure, dim = 1):
 
     '''
 
-    m0, S0 = unpack_vec(v0, dim)
-    m1, S1 = unpack_vec(v1, dim)
+    m0, S0 = unpack_vec(v0, dim, full_cov)
+    m1, S1 = unpack_vec(v1, dim, full_cov)
 
     return measure(m0, S0, m1, S1)
 
@@ -94,10 +99,10 @@ def KL_mvn(m0, S0, m1, S1):
     '''
 
     # Type casting to avoid numba issues
-    m0 = m0.astype(np.float32)
-    m1 = m1.astype(np.float32)
-    S0 = S0.astype(np.float32)
-    S1 = S1.astype(np.float32)
+    m0 = m0.astype(np.float64)
+    m1 = m1.astype(np.float64)
+    S0 = S0.astype(np.float64)
+    S1 = S1.astype(np.float64)
 
     # Pre-calculations
     dm = m0 - m1             # Difference of means
@@ -113,7 +118,7 @@ def KL_mvn(m0, S0, m1, S1):
     return 0.5 * (trace_term + means_term + log_term)
 
 @numba.njit()
-def KL_mvn_vec(v0, v1, dim = 1):
+def KL_mvn_vec(v0, v1, dim = 1, full_cov = False):
     '''
     Calculate KL divergence of one multivariate normal distribution 
     (distribution 0) to another (distribution 1), given a single vector
@@ -131,7 +136,7 @@ def KL_mvn_vec(v0, v1, dim = 1):
         KL divergence from distribution 0 to distribution 1
     '''
 
-    return vec_metric(v0, v1, KL_mvn, dim)
+    return vec_metric(v0, v1, KL_mvn, dim, full_cov)
 
 ##########################
 # Bhattacharyya Distance #
@@ -158,10 +163,10 @@ def bhattacharyya_mvn(m0, S0, m1, S1):
     '''
 
     # Type casting to avoid numba issues
-    m0 = m0.astype(np.float32)
-    m1 = m1.astype(np.float32)
-    S0 = S0.astype(np.float32)
-    S1 = S1.astype(np.float32)
+    m0 = m0.astype(np.float64)
+    m1 = m1.astype(np.float64)
+    S0 = S0.astype(np.float64)
+    S1 = S1.astype(np.float64)
 
     # Pre-calculations
     dm = m0 - m1             # Difference of means
@@ -178,7 +183,7 @@ def bhattacharyya_mvn(m0, S0, m1, S1):
     return means_term + log_term
 
 @numba.njit()
-def bhattacharyya_mvn_vec(v0, v1, dim = 1):
+def bhattacharyya_mvn_vec(v0, v1, dim = 1, full_cov = False):
     '''
     Calculate Bhattacharyya distance between two multivariate normal 
     distributions (0 and 1), given a single vector containing the 
@@ -196,4 +201,27 @@ def bhattacharyya_mvn_vec(v0, v1, dim = 1):
         Bhattacharyya distance between distribution 0 and distribution 1
     '''
 
-    return vec_metric(v0, v1, bhattacharyya_mvn, dim)
+    return vec_metric(v0, v1, bhattacharyya_mvn, dim, full_cov)
+
+@numba.njit(parallel = True, fastmath = True)
+def fast_bhat(v0, v1, dim = 1):
+    # INCORRECT
+
+
+    # Type casting to avoid numba issues
+    m0 = v0[:dim].astype(np.float64)
+    m1 = v1[:dim].astype(np.float64)
+    s0 = v0[dim:].astype(np.float64)
+    s1 = v1[dim:].astype(np.float64)
+
+    # Pre-calculations
+    dm = m0 - m1             # Difference of means
+    s = s0 + s1              # Sum of covariance matrices
+    
+    return 0.25 * (np.sum(dm * dm / s) + (np.sum(s0) + np.sum(s1)))
+
+
+
+
+
+

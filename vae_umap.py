@@ -1,3 +1,5 @@
+from mpl_toolkits.mplot3d import Axes3D
+
 import pandas as pd
 import numpy as np
 import umap
@@ -6,36 +8,107 @@ import numba
 import scipy
 import math
 import metrics
+import sklearn.manifold as skman 
+import sklearn.decomposition as skdec
+import time
+
+## Testing Metrics
+#data = np.array([[0, 0, 0, 1, 1, 1], [1, 1, 1, 1, 1, 1], [-1, -1, -1, 2, 2, 2], [-1, 1, -1, 2, 2, 2]]).astype(np.float32)
+
+#reducer = umap.UMAP(n_components = 2, metric = metrics.bhattacharyya_mvn_vec, metric_kwds = {'dim': 3}, n_neighbors = 3)
+#embedding = reducer.fit_transform(data)
+
+#plt.scatter(embedding[:, 0], embedding[:, 1], c = [0, 1, 2, 3], cmap='Spectral', s=5)
+#plt.gca().set_aspect('equal', 'datalim')
+#plt.colorbar(boundaries=np.arange(5)-0.5).set_ticks(np.arange(4))
+#plt.show()
+#exit()
+
 
 data_df = pd.read_csv('result.csv', header = None, skiprows = lambda x: x % 2 == 0)
 files_df = pd.read_csv('result.csv', header = None, skiprows = lambda x: x % 2 == 1)
-files = list(files_df.values)
-files = [str(file).split('_') for file in files]
-files = [file[0][5:] for file in files]
+files_df = files_df.rename(columns = {0 :'ID'})
+
+#for index, row in files_df.iterrows():
+#    row[0] = str(row[0]).split('_')[0][3:]
 
 subjects_df = pd.read_csv('subjects.csv', header = 0)
 
-print(subjects_df)
+df = pd.concat([files_df, data_df], axis = 1)
+df = pd.concat([df, subjects_df], axis = 1)
 
+files = files_df.values
+#print(files)
 data = data_df.values
-
-
-sides = [subjects_df.loc('Side', files[0][i]) for i in range(len(data))]
-print(sides)
-
-print(data.shape)
+labels = ["left" in str(file) or "LEFT" in str(file) or "L_E_F_T" in str(file) for file in files]
+#print(labels)
 
 points = data.shape[0]
-dim = data.shape[1] / 2
+dim = 32
 
-means = data[:, 0:int(dim - 1)]
+means = data[:, :dim]
 
-reducer = umap.UMAP(n_components = 2)
+#print(np.mean(data[:, :dim]))
+#print(np.std(data[:, :dim]))
+
+#print(np.mean(data[:, dim:]))
+#print(np.std(data[:, dim:]))
+
+var = np.square(data[:, dim:])
+data = np.concatenate([means, var], axis = 1)
+print(data.shape)
+
+# Pre-apply PCA
+#new_dim = 10
+#pca = skdec.PCA(n_components = new_dim)
+#pca.fit(means)
+#new_means = pca.transform(means)
+
+# Here, we have to go from a diagonal covariance matrix to a full one, due to the
+# basis change applied by the PCA
+
+#new_comp = pca.components_
+#print(new_comp.shape)
+
+#new_var = []
+## Now, we apply this transformation to the covariance matrix
+#for el in var:
+#    cov = np.diag(el)
+#    new_cov = new_I.T @ cov
+#    new_var.append(np.reshape(new_cov, (new_dim * new_dim,)))
+
+#new_var = np.array(new_var)
+##new_var = pca.transform(var)
+#print(new_means.shape, new_var.shape)
+
+#new_data = np.concatenate([new_means, new_var], axis = 1)
+#print(new_data.shape)
+
+#data = data[::50, :]
+#labels = labels[::50]
+#new_data = new_data[:, :]
+#new_means = new_means[:, :]
+
+#reducer = umap.UMAP(n_components = 3, verbose = True)
+reducer = umap.UMAP(n_components = 3, metric = metrics.fast_bhat, metric_kwds = {'dim': dim}, verbose = True)
+#reducer = umap.UMAP(n_components = 3, metric = metrics.bhattacharyya_mvn_vec, metric_kwds = {'dim': dim, 'full_cov': False}, verbose = True)
 #reducer = umap.UMAP(n_components = 2)
 
-embedding = reducer.fit_transform(data)
+#embedding = reducer.fit_transform(new_means)
+#embedding = reducer.fit_transform(new_data)
+t = time.time()
+embedding = reducer.fit_transform(data[::50])
+elapsed = time.time() - t
+print("Fitting and transforming took {} seconds".format(elapsed))
 
-plt.plot(embedding[:, 0], embedding[:, 1], 'bo')
+# 2D Plot
+#plt.scatter(embedding[:, 0], embedding[:, 1], c= labels[:], cmap='Spectral', s=5)
+#plt.show()
+
+# 3D Plot
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(embedding[:, 0], embedding[:, 1], embedding[:, 2], c = labels[::50], cmap = 'Spectral', s = 5)
 plt.show()
 
 #print(data)

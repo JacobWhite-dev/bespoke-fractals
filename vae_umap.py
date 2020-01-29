@@ -11,6 +11,7 @@ import metrics
 import sklearn.manifold as skman 
 import sklearn.decomposition as skdec
 import time
+from visualiser import Visualiser
 
 ## Testing Metrics
 #data = np.array([[0, 0, 0, 1, 1, 1], [1, 1, 1, 1, 1, 1], [-1, -1, -1, 2, 2, 2], [-1, 1, -1, 2, 2, 2]]).astype(np.float32)
@@ -41,6 +42,13 @@ files = files_df.values
 #print(files)
 data = data_df.values
 labels = ["left" in str(file) or "LEFT" in str(file) or "L_E_F_T" in str(file) for file in files]
+labels = [int(label) for label in labels]
+labels2 = [str(name[0]).split('_')[2] for name in files]
+labels2 = [int(string) if string.isdigit() else np.nan for string in labels2]
+labels2 = [5 if el > 5 else el for el in labels2]
+slices = [int(str(name[0]).split('_')[-1][:-4]) for name in files]
+print(slices)
+#print(labels2)
 #print(labels)
 
 points = data.shape[0]
@@ -89,26 +97,35 @@ print(data.shape)
 #new_data = new_data[:, :]
 #new_means = new_means[:, :]
 
-#reducer = umap.UMAP(n_components = 3, verbose = True)
-reducer = umap.UMAP(n_components = 3, metric = metrics.fast_bhat, metric_kwds = {'dim': dim}, verbose = True)
+reducer5 = umap.UMAP(n_components = 3, verbose = True)
+reducer = umap.UMAP(n_components = 2, metric = metrics.fast_bhattacharyya_mvn, metric_kwds = {'dim': dim}, verbose = True)
+reducer2 = skman.Isomap(n_components = 3)
+reducer3 = skman.LocallyLinearEmbedding(n_components = 2)
+reducer4 = skman.SpectralEmbedding(n_components = 2)
 #reducer = umap.UMAP(n_components = 3, metric = metrics.bhattacharyya_mvn_vec, metric_kwds = {'dim': dim, 'full_cov': False}, verbose = True)
 #reducer = umap.UMAP(n_components = 2)
 
-#embedding = reducer.fit_transform(new_means)
-#embedding = reducer.fit_transform(new_data)
-t = time.time()
-embedding = reducer.fit_transform(data[::50])
-elapsed = time.time() - t
-print("Fitting and transforming took {} seconds".format(elapsed))
+labels = {'Leg': labels[::20], 'Slice' : slices[::20]}
+visualiser = Visualiser(data[::20], labels, reducer)
+#visualiser = Visualiser(means[::50], [labels[::50], labels2[::50]], reducer4)
+visualiser.fit_transform()
+visualiser.plot_result()
 
-# 2D Plot
-#plt.scatter(embedding[:, 0], embedding[:, 1], c= labels[:], cmap='Spectral', s=5)
+##embedding = reducer.fit_transform(new_means)
+##embedding = reducer.fit_transform(new_data)
+#t = time.time()
+#embedding = reducer.fit_transform(data[::50])
+#elapsed = time.time() - t
+#print("Fitting and transforming took {} seconds".format(elapsed))
+
+## 2D Plot
+##plt.scatter(embedding[:, 0], embedding[:, 1], c= labels[:], cmap='Spectral', s=5)
+##plt.show()
+
+## 3D Plot
+#fig = plt.figure()
+#ax = fig.add_subplot(111, projection='3d')
+#ax.scatter(embedding[:, 0], embedding[:, 1], embedding[:, 2], c = labels[::50], cmap = 'Spectral', s = 5)
 #plt.show()
-
-# 3D Plot
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(embedding[:, 0], embedding[:, 1], embedding[:, 2], c = labels[::50], cmap = 'Spectral', s = 5)
-plt.show()
 
 #print(data)

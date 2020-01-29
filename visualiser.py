@@ -9,8 +9,19 @@ from mpl_toolkits.mplot3d import Axes3D
 class Visualiser():
 
     def __init__(self, data, labels, reducer):
+
         self._data = np.array(data)
-        self._labels = np.array(labels)
+
+        # Check if labels are dataframe
+        if not isinstance(labels, pd.DataFrame):
+            # Convert to dataframe with default titles
+            print("Labels have not been provided as a pandas DataFrame",
+                  "and will be cast to one. Default label names will be",
+                  "generated and errors may occur")
+            labels = pd.DataFrame(data = labels)
+
+        self._labels = labels
+
         self._reducer = reducer
         self._result = None
 
@@ -59,8 +70,15 @@ class Visualiser():
 
     def __plot_result_2d(self, fig, rows, cols, index):
         
+        labels = self._labels.iloc[:, index]
+        max_label = np.amax(labels)
+        min_label = np.amin(labels)
+        delta_labels = max_label - min_label + 1
+
         ax = fig.add_subplot(rows, cols, index + 1)
-        ax.scatter(self._result[:, 0], self._result[:, 1], c= self._labels[index, :], cmap = 'Spectral', s = 5)
+        im = ax.scatter(self._result[:, 0], self._result[:, 1], c= self._labels.iloc[:, index], cmap = 'Spectral', s = 5)
+        fig.colorbar(im, boundaries = np.arange(delta_labels + 1) - 0.5, ax = ax).set_ticks(np.arange(delta_labels))
+        ax.set_title(self._labels.columns[index])
 
     def __plot_result_3d(self, fig, rows, cols, index):
 
@@ -77,7 +95,7 @@ class Visualiser():
             print("No result has been calculated.")
             return
 
-        numPlots = 1 if self._labels.ndim == 1 else self._labels.shape[0]
+        numPlots = 1 if self._labels.ndim == 1 else self._labels.shape[1]
         rows = math.ceil(math.sqrt(numPlots))
         cols = math.ceil(numPlots / rows)
 
@@ -89,7 +107,7 @@ class Visualiser():
         fig = plt.figure()
         for i in range(numPlots):
             plot_func(fig, rows, cols, i)
-
+            plt.gca().set_aspect('equal', 'datalim')
         plt.show()
 
 

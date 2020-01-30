@@ -10,8 +10,6 @@ class Visualiser():
 
     def __init__(self, data, labels, reducer):
 
-        self._data = np.array(data)
-
         # Check if labels are dataframe
         if not isinstance(labels, pd.DataFrame):
             # Convert to dataframe with default titles
@@ -20,8 +18,11 @@ class Visualiser():
                   "generated and errors may occur")
             labels = pd.DataFrame(data = labels)
 
-        self._labels = labels
+        if not isintance(data, np.array):
+            data = np.array(data)
 
+        self._labels = labels
+        self._data = data
         self._reducer = reducer
         self._result = None
 

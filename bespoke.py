@@ -63,8 +63,14 @@ def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, 
     fareyVectors = farey.Farey()        
     fareyVectors.compactOn()
     fareyVectors.generateFiniteWithCoverage(N)
+    #plt.scatter(np.real(fareyVectors.vectors), np.imag(fareyVectors.vectors))
+    #plt.show()
     #fareyVectors.generateFinite(N)
-    print(fareyVectors.vectors)
+    #print(fareyVectors.vectors)
+    vecs = fareyVectors.vectors
+    vecs_2q = [farey.farey(-np.imag(vec), np.real(vec)) for vec in vecs]
+    fareyVectors.vectors.extend(vecs_2q)
+    fareyVectors.generateFinite(N)
     
     #sort to reorder result for prettier printing
     finiteAnglesSorted, anglesSorted = fareyVectors.sortCustom(sortBy)
@@ -85,7 +91,7 @@ def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, 
     #finiteAnglesSorted = [farey.toFinite(angle, N) for angle in anglesSorted]
 
     kSpace = np.zeros((N,N))
-    lines, angles, mValues = finite.computeKatzLines(kSpace, anglesSorted, finiteAnglesSorted, K, centered, twoQuads)
+    lines, angles, mValues = finite.computeKatzLines(kSpace, anglesSorted, finiteAnglesSorted, K, centered, twoQuads = False)
     mu = len(lines)
     print("Number of finite lines in fractal:", mu)
     
@@ -228,11 +234,14 @@ def spiral(p, q):
 def conc(p, q):
     return math.sqrt(math.pow(p, 2) + math.pow(q, 2)) % 6
 
+def ellipse(p, q):
+    return math.pow((p - 2 * q), 2) + p * q
+
 #print(get_farey_index(1, 1, 4))
 #exit()
 
-N = 1025
-K = 1
+N = 1024
+K = 20
 
 def novel_frac():
     _, _, _, q1, _ = myFiniteFractal(int(N / 2), K, sortBy = new, twoQuads = True)
@@ -257,7 +266,7 @@ def novel_frac():
 
 l3 = lambda p,q: (math.pow((p), 0.5) + math.pow((q), 0.5))
 #l3 = lambda p,q: math.pow(p, 2) / 8 + math.pow(q, 2)
-lines, angles, mValues, fractal, overSamplingFilter = myFiniteFractal(N, K, sortBy = rotated_diamond, twoQuads = True)
+lines, angles, mValues, fractal, overSamplingFilter = myFiniteFractal(N, K, sortBy = lambda p,q: -rem_dist(p, q, N), twoQuads = True)
 
 # Tile center region further
 #radius = N/250

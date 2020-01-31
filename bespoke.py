@@ -21,16 +21,16 @@ import math
 import scipy.fftpack as fftpack
 import pyfftw
 
-np.seterr(divide='ignore', invalid='ignore') # Skip dividing by zero
+#np.seterr(divide='ignore', invalid='ignore') # Skip dividing by zero
 
-# Monkey patch in fftn and ifftn from pyfftw.interfaces.scipy_fftpack
-fftpack.fft2 = pyfftw.interfaces.scipy_fftpack.fft2
-fftpack.ifft2 = pyfftw.interfaces.scipy_fftpack.ifft2
-fftpack.fft = pyfftw.interfaces.scipy_fftpack.fft
-fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
+## Monkey patch in fftn and ifftn from pyfftw.interfaces.scipy_fftpack
+#fftpack.fft2 = pyfftw.interfaces.scipy_fftpack.fft2
+#fftpack.ifft2 = pyfftw.interfaces.scipy_fftpack.ifft2
+#fftpack.fft = pyfftw.interfaces.scipy_fftpack.fft
+#fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
 
-# Turn on the cache for optimum performance
-pyfftw.interfaces.cache.enable()
+## Turn on the cache for optimum performance
+#pyfftw.interfaces.cache.enable()
 
 #fareyVectors = farey.Farey()
 #fareyVectors.compactOn()
@@ -264,7 +264,7 @@ def poly(p, q, points):
     return a
     #print("Lower: [{},{}]; Upper: [{},{}]; Point: [{},{}]; a = {}".format(x1, y1, x2, y2, x3, y3, a))
 
-points = np.array([[5,5], [1,2], [-3,3], [-5, -5], [-1, -2], [3, -3]])
+#points = np.array([[5,5], [1,2], [-3,3], [-5, -5], [-1, -2], [3, -3]])
 
 def hex(p, q):
     # Get hextant
@@ -295,8 +295,8 @@ def ellipse(p, q):
 #print(get_farey_index(1, 1, 4))
 #exit()
 
-N = 1024
-K = 1
+#N = 1024
+#K = 1
 
 def novel_frac():
     _, _, _, q1, _ = myFiniteFractal(int(N / 2), K, sortBy = new, twoQuads = True)
@@ -316,38 +316,38 @@ def novel_frac():
 
     return result
 
-#plt.imshow(novel_frac())
+##plt.imshow(novel_frac())
+##plt.show()
+
+#l3 = lambda p,q: (math.pow((p), 0.5) + math.pow((q), 0.5))
+##l3 = lambda p,q: math.pow(p, 2) / 8 + math.pow(q, 2)
+#lines, angles, mValues, fractal, overSamplingFilter = myFiniteFractal(N, K, sortBy = lambda p,q: poly(p,q,points), twoQuads = True)
+
+## Tile center region further
+##radius = N/250
+##centerX = N/2   
+##centerY = N/2
+##count = 0
+#fractal = fftpack.fftshift(fractal)
+##for i, row in enumerate(fractal):
+##    for j, col in enumerate(row):
+##        distance = rotated_diamond(i - float(centerX), j - float(centerY))
+##        #distance = math.sqrt( (i-float(centerX))**2 + (j-float(centerY))**2)
+##        if distance < radius:
+##            if not fractal[i, j] > 0: #already selected
+##                count += 1
+##                #fractal[i, j] = 1
+###fractal = fftpack.fftshift(fractal)
+
+#plt.imshow(fractal)
 #plt.show()
+#exit()
 
-l3 = lambda p,q: (math.pow((p), 0.5) + math.pow((q), 0.5))
-#l3 = lambda p,q: math.pow(p, 2) / 8 + math.pow(q, 2)
-lines, angles, mValues, fractal, overSamplingFilter = myFiniteFractal(N, K, sortBy = lambda p,q: poly(p,q,points), twoQuads = True)
-
-# Tile center region further
-#radius = N/250
-#centerX = N/2   
-#centerY = N/2
-#count = 0
-fractal = fftpack.fftshift(fractal)
-#for i, row in enumerate(fractal):
-#    for j, col in enumerate(row):
-#        distance = rotated_diamond(i - float(centerX), j - float(centerY))
-#        #distance = math.sqrt( (i-float(centerX))**2 + (j-float(centerY))**2)
-#        if distance < radius:
-#            if not fractal[i, j] > 0: #already selected
-#                count += 1
-#                #fractal[i, j] = 1
-##fractal = fftpack.fftshift(fractal)
-
-plt.imshow(fractal)
-plt.show()
-exit()
-
-print(fractal)
-#totalSamples = mu*(N-1)+count+1
-#actualR = float(totalSamples/N**2)
-#print("Number of total sampled points:", totalSamples)
-#print("Actual Reduction factor:", actualR)
+#print(fractal)
+##totalSamples = mu*(N-1)+count+1
+##actualR = float(totalSamples/N**2)
+##print("Number of total sampled points:", totalSamples)
+##print("Actual Reduction factor:", actualR)
 
 
 

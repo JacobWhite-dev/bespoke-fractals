@@ -18,8 +18,8 @@ class Visualiser():
                   "generated and errors may occur")
             labels = pd.DataFrame(data = labels)
 
-        if not isintance(data, np.array):
-            data = np.array(data)
+        #if not isinstance(data, np.array):
+        #    data = np.array(data)
 
         self._labels = labels
         self._data = data
@@ -75,16 +75,27 @@ class Visualiser():
         max_label = np.amax(labels)
         min_label = np.amin(labels)
         delta_labels = max_label - min_label + 1
+        colourBarOn = True if delta_labels <= 30 else False
 
         ax = fig.add_subplot(rows, cols, index + 1)
         im = ax.scatter(self._result[:, 0], self._result[:, 1], c= self._labels.iloc[:, index], cmap = 'Spectral', s = 5)
-        fig.colorbar(im, boundaries = np.arange(delta_labels + 1) - 0.5, ax = ax).set_ticks(np.arange(delta_labels))
+        if colourBarOn:
+            fig.colorbar(im, boundaries = np.arange(min_label, max_label + 2) - 0.5, ax = ax).set_ticks(np.arange(min_label, max_label + 2))
         ax.set_title(self._labels.columns[index])
 
     def __plot_result_3d(self, fig, rows, cols, index):
+        labels = self._labels.iloc[:, index]
+        max_label = np.amax(labels)
+        min_label = np.amin(labels)
+        delta_labels = max_label - min_label + 1
+        colourBarOn = True if delta_labels <= 30 else False
 
         ax = fig.add_subplot(rows, cols, index + 1, projection='3d')
-        ax.scatter(self._result[:, 0], self._result[:, 1], self._result[:, 2], c = self._labels[index, :], cmap = 'Spectral', s = 5)
+        im = ax.scatter(self._result[:, 0], self._result[:, 1], self._result[:, 2], c = self._labels.iloc[:, index].values, cmap = 'Spectral', s = 5)
+        
+        if colourBarOn:
+            fig.colorbar(im, boundaries = np.arange(delta_labels + 1) - 0.5, ax = ax).set_ticks(np.arange(delta_labels))
+        ax.set_title(self._labels.columns[index])
 
     def __invalid_dimensions(self, *argv, **kwargs):
         print("Data cannot be plotted.")
@@ -108,7 +119,7 @@ class Visualiser():
         fig = plt.figure()
         for i in range(numPlots):
             plot_func(fig, rows, cols, i)
-            plt.gca().set_aspect('equal', 'datalim')
+            #plt.gca().set_aspect('equal', 'datalim')
         plt.show()
 
 

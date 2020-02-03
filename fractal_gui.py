@@ -15,7 +15,7 @@ fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
 # Turn on the cache for optimum performance
 pyfftw.interfaces.cache.enable()
 
-print("Starting")
+#print("Starting")
 
 CANVAS_DIM = 500
 CANVAS_ORIGIN = CANVAS_DIM // 2
@@ -32,9 +32,9 @@ def to_y(y):
 def from_y(y):
     return CANVAS_ORIGIN - y
 
-def mirror_point(x, y):
-
-    return [-x, -y]
+#def mirror_point(x, y):
+#
+#    return [-x, -y]
 
 def on_click(event):
     #print(event.x, event.y)
@@ -51,10 +51,12 @@ class FractalGUI(tk.Tk):
         self._points = []
         self._mirrored_points = []
         self._poly = None
-        self._arc1 = None
-        self._arc2 = None
-        self._last_angle = 0
+        self._first_angle = None
+        self._last_angle = None
         self._done = False
+        self._valid = True
+        self._dashes = {True: None, False: [1, 1]}
+        self._colours = {True: "green", False: "red"}
 
         # Canvas
         self._plot = tk.Canvas(self, bg = 'white', width = CANVAS_DIM, height = CANVAS_DIM)
@@ -65,6 +67,8 @@ class FractalGUI(tk.Tk):
         self._plot.bind('<Double-Button-1>', self.canvas_double_click)
         self._plot.bind('<Button-3>', self.canvas_right_click)
         self._plot.bind('<Motion>', self.canvas_motion)
+        self.bind('<Escape>', self.canvas_unfollow)
+        
 
         # Entries
         self._button_frame = tk.Frame(self)
@@ -88,77 +92,127 @@ class FractalGUI(tk.Tk):
         self._k_entry.insert(0, "1")
         self._k_entry.pack(side = 'right', expand = False, fill = tk.NONE)
 
+        # Clear button
+        self._clear_button = tk.Button(self._button_frame, text = "Clear", 
+                                       command = self.clear_canvas)
+        self._clear_button.pack(side = 'left', expand = False, fill = tk.NONE)
+
         # Generate Button
         self._gen_button = tk.Button(self._button_frame, text = "Generate", 
                                      command = self.generate_fractal)
         self._gen_button.pack(side = 'right', expand = False, fill = tk.NONE)
 
-    def canvas_click(self, event):
+    def clear_canvas(self):
+        if self._poly is not None:
+            self._plot.delete(self._poly)
+            self._poly = None
+        self._points = []
+        self._mirrored_points = []
+        self._last_angle = None
+        self._first_angle = None
         self._done = False
+        self._valid = True
 
-        x = to_x(event.x)
-        y = to_y(event.y)
-        #self._plot.create_line(event.x, event.y, from_x(-x), from_y(-y))
+    def calculate_angle(self, x, y):
+        return math.atan2(to_y(y), to_x(x)) % (2 * math.pi)
+
+    def mirror_point(self, x, y):
+        return from_x(-to_x(x)), from_y(-to_y(y))
+
+    def is_angle_valid(self, angle):
+        if self._first_angle is None or self._last_angle is None:
+            return True
+
+        true_angle = (angle - self._first_angle) % (2 * math.pi)
+        true_last_angle = (self._last_angle - self._first_angle) % (2 * math.pi)
+
+        big_enough = true_angle > true_last_angle
+        small_enough = true_angle < math.pi
+        return big_enough and small_enough
+
+    def add_point(self, x, y, angle = None):
+        self._points.extend([x, y])
+        self._mirrored_points.extend(list(self.mirror_point(x, y)))
+
+        if angle is None:
+            angle = self.calculate_angle(x, y)
+
+        if self._first_angle is None:
+            self._first_angle = angle
+        
+        self._last_angle = angle
+
+    def remove_point(self):
+
+        if len(self._points) < 2:
+            print("No points to remove")
+            return
+
+        del self._points[-2:]
+        del self._mirrored_points[-2:]
+
+        if len(self._points) < 2:
+            self._first_angle = None
+            self._last_angle = None
+            return
+
+        last_x = self._points[-2]
+        last_y = self._points[-1]
+        angle = self.calculate_angle(last_x, last_y)
+
+        if len(self._points) < 4:
+            self._first_angle = angle
+
+        self._last_angle = angle
+
+    def draw_poly(self, points, fill, outline, dash):
         if self._poly is not None:
             self._plot.delete(self._poly)
 
-        self._points.extend([event.x, event.y])
-        self._mirrored_points.extend([from_x(-x), from_y(-y)])
-        try:
-            self._poly = self._plot.create_polygon(self._points + self._mirrored_points, fill = "", outline = "black")
-        except:
-            pass
+        if len(points) >= 4:
+            self._poly = self._plot.create_polygon(points, fill = fill, outline = outline, dash = dash)
 
-        self._last_angle = math.atan2(y,x) * 180 / math.pi
+    def update_poly(self, points):
+        self.draw_poly(points, "", self._colours.get(self._valid), self._dashes.get(self._done))
+
+    def canvas_click(self, event):
+        if self._done:
+            self._done = False
+            return
+
+        angle = self.calculate_angle(event.x, event.y)
+        self._valid = self.is_angle_valid(angle)
+
+        if self._valid:
+            self.add_point(event.x, event.y)
+            self.update_poly(self._points + self._mirrored_points)
 
     def canvas_double_click(self, event):
-        self.canvas_click(event)
-        self._done = True
+        self.canvas_unfollow(event)    
 
     def canvas_right_click(self, event):
-        self._done = False
+        if self._done:
+            self._done = False
+            return
 
-        try:
-            self._points = self._points[:-2]
-            self._mirrored_points = self._mirrored_points[:-2]
-        except IndexError:
-            pass
+        self.remove_point()
+        self.update_poly(self._points + self._mirrored_points)
 
-        if self._poly is not None:
-            self._plot.delete(self._poly)
-
-        try:
-            self._poly = self._plot.create_polygon(self._points + self._mirrored_points, fill = "", outline = "black")
-        except:
-            pass
+    def canvas_unfollow(self, event):
+        self._done = True
+        self._valid = True
+        self.update_poly(self._points + self._mirrored_points)
 
     def canvas_motion(self, event):
 
         if self._done:
             return
 
-        fills = {True: 'green', False: 'red'}
-        x = to_x(event.x)
-        y = to_y(event.y)
-        #r = math.sqrt(x * x + y * y)
-        r = 25
-        theta = math.atan2(y,x) * 180 / math.pi
+        angle = self.calculate_angle(event.x, event.y)
+        self._valid = self.is_angle_valid(angle)
 
-        fill = fills[theta > self._last_angle]
-
-        if self._arc1 is not None:
-            self._plot.delete(self._arc1)
-        if self._arc2 is not None:
-            self._plot.delete(self._arc2)
-
-        #self._arc1 = self._plot.create_arc(250 + r, 250 + r, 250 - r, 250 - r, start = self._last_angle, extent = theta - self._last_angle, fill = fill)
-        #self._arc2 = self._plot.create_arc(250 + r, 250 + r, 250 - r, 250 - r, start = 180 + self._last_angle, extent = theta - self._last_angle, fill = fill)
-        #self._arc1 = self._plot.create_arc(250 + r, 250 + r, 250 - r, 250 - r, start = 0, extent = theta, fill = fill)
-        #self._arc1 = self._plot.create_line(from_x(-x), from_y(-y), event.x, event.y, dash = [1,1], fill = fill)
-
-        self._arc2 = self._plot.create_polygon(self._points + [event.x, event.y] + self._mirrored_points + [from_x(-x), from_y(-y)], dash = [1,1], fill = "",
-                                               outline = fill)
-        #self._last_angle = theta
+        points = self._points + [event.x, event.y] + self._mirrored_points + list(self.mirror_point(event.x, event.y))
+        self.update_poly(points)
 
     def generate_fractal(self):
         # Get N and K
@@ -174,6 +228,14 @@ class FractalGUI(tk.Tk):
         
         print(input)
         input = np.array(input)
+        angles = np.mod(np.arctan2(input[:, 1], input[:, 0]), 2 * math.pi)
+
+        # Sort inputs by angle so that polygon thing works
+        indices = np.argsort(angles)
+        print(angles)
+        print(input)
+        input = input[indices]
+        print(input)
 
         lines, angles, mValues, fractal, overSamplingFilter = bespoke.myFiniteFractal(N, K, sortBy = lambda p,q: bespoke.poly(p,q,input), twoQuads = True)
         fractal = fftpack.fftshift(fractal)

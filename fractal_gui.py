@@ -15,53 +15,38 @@ fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
 # Turn on the cache for optimum performance
 pyfftw.interfaces.cache.enable()
 
-#print("Starting")
-
-CANVAS_DIM = 500
-CANVAS_ORIGIN = CANVAS_DIM // 2
-
-def to_x(x):
-    return x - CANVAS_ORIGIN
-
-def from_x(x):
-    return x + CANVAS_ORIGIN
-
-def to_y(y):
-    return CANVAS_ORIGIN - y
-
-def from_y(y):
-    return CANVAS_ORIGIN - y
-
-#def mirror_point(x, y):
-#
-#    return [-x, -y]
-
-def on_click(event):
-    #print(event.x, event.y)
-    x = to_x(event.x)
-    y = to_y(event.y)
-    points.append([x, y])
-    points.append(mirror_point(x,y))
-    canvas.create_polygon(map(lambda point: [from_x(point[0]), from_y(point[1])], points))
-
 class FractalGUI(tk.Tk):
-    def __init__(self):
+    '''
+    Bespoke fractal graphical input application class.
+    '''
+
+    def __init__(self, dim, title = "Fractal GUI"):
         super().__init__()
-        self.title("Fractal GUI")
-        self._points = []
-        self._mirrored_points = []
-        self._poly = None
-        self._first_angle = None
-        self._last_angle = None
-        self._done = False
-        self._valid = True
-        self._dashes = {True: None, False: [1, 1]}
-        self._colours = {True: "green", False: "red"}
+
+        # General
+        self.title(title)               # Window title
+        self._dim = dim                 # Size of canvas (dim x dim)
+        self._origin = dim // 2         # Pixel value at origin
+        self._points = []               # List of selected points on canvas
+        self._mirrored_points = []      # Mirrors of selected points
+        self._poly = None               # Polygon object
+        self._first_angle = None        # Angle of first point drawn
+        self._last_angle = None         # Angle of last point drawn
+        self._done = False              # Flag for if polygon is complete
+        self._valid = True              # Flag for if current point is valid
+        self._dashes = {True: None,     # Options for polygon dashes, based on
+                        False: [1, 1]}  #   value of self._done flag
+        self._colours = {True: "green", # Options for polygon colours, based on
+                         False: "red"}  #   self._valid flag
 
         # Canvas
-        self._plot = tk.Canvas(self, bg = 'white', width = CANVAS_DIM, height = CANVAS_DIM)
-        self._plot.create_line(0, CANVAS_ORIGIN, CANVAS_DIM, CANVAS_ORIGIN)
-        self._plot.create_line(CANVAS_ORIGIN, 0, CANVAS_ORIGIN, CANVAS_DIM)
+        self._plot = tk.Canvas(self, bg = 'white', 
+                               width = self._dim, 
+                               height = self._dim)
+        self._plot.create_line(0, self._origin, 
+                               self._dim, 
+                               self._origin)
+        self._plot.create_line(self._origin, 0, self._origin, self._dim)
         self._plot.pack(side = 'top')
         self._plot.bind('<Button-1>', self.canvas_click)
         self._plot.bind('<Double-Button-1>', self.canvas_double_click)
@@ -69,7 +54,6 @@ class FractalGUI(tk.Tk):
         self._plot.bind('<Motion>', self.canvas_motion)
         self.bind('<Escape>', self.canvas_unfollow)
         
-
         # Entries
         self._button_frame = tk.Frame(self)
         self._button_frame.pack(side = 'bottom')
@@ -102,22 +86,60 @@ class FractalGUI(tk.Tk):
                                      command = self.generate_fractal)
         self._gen_button.pack(side = 'right', expand = False, fill = tk.NONE)
 
+    def to_x(self, pix):
+        '''
+        Convert horizontal pixel value to cartesian x coordinate
+        '''
+        return pix - self._origin
+
+    def from_x(self, x):
+        '''
+        Convert cartesian x coordinate to horizontal pixel value
+        '''
+        return x + self._origin
+
+    def to_y(self, pix):
+        '''
+        Convert vertical pixel value to cartesian y coordinate
+        '''
+        return self._origin - pix
+
+    def from_y(self, y):
+        '''
+        Convert cartesian y coordinate to vertical pixel value
+        '''
+        return self._origin - y
+
+    def calculate_angle(self, x_pix, y_pix):
+        '''
+        Given the pixel values of a point, determine it's angle from the
+        positive x-axis, measured anticlockwise
+        '''
+        return math.atan2(self.to_y(y_pix), self.to_x(x_pix)) % (2 * math.pi)
+
     def clear_canvas(self):
+        '''
+        Clear GUI canvas, resetting relevant variables
+        '''
+        # Delete the current polygon if there is one
         if self._poly is not None:
             self._plot.delete(self._poly)
             self._poly = None
+
+        # Clear points and their mirrors
         self._points = []
         self._mirrored_points = []
+
+        # Clear stored angles
         self._last_angle = None
         self._first_angle = None
+
+        # Reset flags
         self._done = False
         self._valid = True
 
-    def calculate_angle(self, x, y):
-        return math.atan2(to_y(y), to_x(x)) % (2 * math.pi)
-
-    def mirror_point(self, x, y):
-        return from_x(-to_x(x)), from_y(-to_y(y))
+    def mirror_point(self, x_pix, y_pix):
+        return self.from_x(-self.to_x(x_pix)), self.from_y(-self.to_y(y_pix))
 
     def is_angle_valid(self, angle):
         if self._first_angle is None or self._last_angle is None:
@@ -224,26 +246,23 @@ class FractalGUI(tk.Tk):
         print(points)
         input = []
         for i in range(len(points) // 2):
-            input.append([to_x(points[2 * i]), to_y(points[2 * i + 1])])
+            input.append([self.to_x(points[2 * i]), self.to_y(points[2 * i + 1])])
         
-        print(input)
         input = np.array(input)
         angles = np.mod(np.arctan2(input[:, 1], input[:, 0]), 2 * math.pi)
 
         # Sort inputs by angle so that polygon thing works
         indices = np.argsort(angles)
         print(angles)
-        print(input)
         input = input[indices]
-        print(input)
 
-        lines, angles, mValues, fractal, overSamplingFilter = bespoke.myFiniteFractal(N, K, sortBy = lambda p,q: bespoke.poly(p,q,input), twoQuads = True)
+        _, angles, _, fractal, _ = bespoke.myFiniteFractal(N, K, sortBy = lambda p,q: bespoke.poly(p,q,input), twoQuads = True)
         fractal = fftpack.fftshift(fractal)
         plt.imshow(fractal)
         plt.show()
 
 
 if __name__ == "__main__":
-    app = FractalGUI()
+    app = FractalGUI(500)
     app.mainloop()
 

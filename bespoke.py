@@ -115,10 +115,6 @@ def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, 
         radon.setSlice(m, oversamplingFilter, onesSlice, 2)
     oversamplingFilter[oversamplingFilter==0] = 1
     samplesImage1 /= oversamplingFilter
-
-    # if centered:
-    #     samplesImage1 = fftpack.fftshift(samplesImage1)
-
 #    samplesImage1 = fftpack.fftshift(samplesImage1)
     
     return lines, angles, mValues, samplesImage1, oversamplingFilter

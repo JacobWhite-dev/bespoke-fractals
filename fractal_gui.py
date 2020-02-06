@@ -256,8 +256,8 @@ class FractalGUI(tk.Tk):
         print(angles)
         input = input[indices]
 
-        _, angles, _, fractal, _ = bespoke.myFiniteFractal(N, K, sortBy = lambda p,q: bespoke.poly(p,q,input), twoQuads = True)
-        fractal = fftpack.fftshift(fractal)
+        _, angles, _, fractal, _ = bespoke.myFiniteFractal(N, K, sortBy = lambda p,q: bespoke.poly(p,q,input), twoQuads = True, centered = True)
+        #fractal = fftpack.fftshift(fractal)
         plt.imshow(fractal)
         plt.show()
 

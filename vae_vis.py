@@ -57,5 +57,4 @@ print("Preprocessing Done")
 
 # Visualiser
 vis = visualiser.Visualiser(data, labels, reducer)
-vis.fit_transform()
-vis.plot_result()
+vis.visualise()

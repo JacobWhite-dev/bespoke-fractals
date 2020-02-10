@@ -22,15 +22,16 @@ for file in filenames:
         labels[key].append(value)
 
 # Represent cohorts numerically
-lat_nums = {"L": 0, "R": 1}
-labels["lat"] = map(lambda x: lat_nums.get(x, 2), labels["lat"])
-cohort_nums = {"C": 0, "E": 1}
-labels["cohort"] = map(lambda x: cohort_nums.get(x, 2), labels["cohort"])
+#lat_nums = {"L": 0, "R": 1}
+#labels["lat"] = map(lambda x: lat_nums.get(x, 2), labels["lat"])
+#cohort_nums = {"C": 0, "E": 1}
+#labels["cohort"] = map(lambda x: cohort_nums.get(x, 2), labels["cohort"])
 labels = pd.DataFrame(data = labels)
+print(labels)
 
 # Visualise
 dim = 256
-reducer = VAEUMAP(dim, random_state = 3, n_components = 2, verbose = True)
+reducer = VAEUMAP(dim, random_state = 2, n_components = 2, verbose = True)
 visualiser = vis.Visualiser(data, labels, reducer)
 #visualiser.fit_transform()
 visualiser.visualise()

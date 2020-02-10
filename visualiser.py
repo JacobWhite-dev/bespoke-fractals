@@ -182,17 +182,43 @@ class Visualiser():
         plt.gca().set_aspect('equal', 'datalim')
 
     def __plot_result_3d(self, fig, rows, cols, index):
-        labels = self._labels.iloc[:, index].astype(np.float32)
-        max_label = np.amax(labels)
-        min_label = np.amin(labels)
-        delta_labels = max_label - min_label + 1
-        colourBarOn = True if delta_labels <= 30 else False
+        labels = self._labels.iloc[:, index]
+
+        # Handle non-numeric and numeric labels
+        #if issubclass(labels.dtype.type, int):
+        is_numeric = True
+
+        try:
+            labels = labels.astype(float)
+        except:
+            is_numeric = False
+
+        if is_numeric:
+            print("Numeric")
+            max_label = np.amax(labels)
+            min_label = np.amin(labels)
+            delta_labels = max_label - min_label + 1
+            c = self._labels.iloc[:, index].astype(np.float32)
+            boundaries = np.arange(delta_labels + 1) - 0.5
+            ticks = np.arange(delta_labels)
+        else:
+            print("Non-numeric")
+            unique = labels.unique()
+            c = np.array([int((unique == label)[0]) for label in labels])
+            boundaries = np.arange(unique.size + 1) - 0.5
+            ticks = np.arange(unique.size + 1)
+
+        colourBarOn = True
+        #colourBarOn = True if delta_labels <= 30 else False
 
         ax = fig.add_subplot(rows, cols, index + 1, projection='3d')
-        im = ax.scatter(self._result[:, 0], self._result[:, 1], self._result[:, 2], c = self._labels.iloc[:, index].astype(np.float32), cmap = 'Spectral', s = 5)
+        im = ax.scatter(self._result[:, 0], self._result[:, 1], self._result[:, 2], c = c, cmap = 'Spectral', s = 5)
         
         if colourBarOn:
-            fig.colorbar(im, boundaries = np.arange(delta_labels + 1) - 0.5, ax = ax).set_ticks(np.arange(delta_labels))
+            cbar = fig.colorbar(im, boundaries = boundaries, ax = ax)
+            cbar.set_ticks(ticks)
+            if not is_numeric:
+                cbar.set_ticklabels(unique)
         ax.set_title(self._labels.columns[index])
 
     def __invalid_dimensions(self, *argv, **kwargs):

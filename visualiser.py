@@ -13,6 +13,7 @@ import pandas as pd
 import sklearn.manifold
 import metrics
 import matplotlib.pyplot as plt
+
 from mpl_toolkits.mplot3d import Axes3D
 
 class Visualiser():
@@ -76,21 +77,13 @@ class Visualiser():
 
     def __init__(self, data, labels, reducer):
 
+        self._labels = None
+        self._data = None
+        self._result = None
+
         self.set_data(data)
         self.set_labels(labels)
         self.set_reducer(reducer)
-
-        self._result = None
-
-    def data_consistent(self):
-        if self._labels is None or self._data is None:
-            return True
-
-        # Check that labels and data have same number of points
-        numLabels, _ = self._labels.shape
-        numDataPts, _ = self._data.shape
-
-        return numLabels == numDataPts
 
     def set_data(self, data):
 
@@ -148,6 +141,16 @@ class Visualiser():
     def get_result(self):
         return self._result
 
+    def data_consistent(self):
+        if self._labels is None or self._data is None:
+            return True
+
+        # Check that labels and data have same number of points
+        numLabels, _ = self._labels.shape
+        numDataPts, _ = self._data.shape
+
+        return numLabels == numDataPts
+
     def fit(self):
         self._reducer.fit(self._data)
 
@@ -165,28 +168,28 @@ class Visualiser():
 
     def __plot_result_2d(self, fig, rows, cols, index):
         # Get labels for plot
-        labels = self._labels.iloc[:, index]
+        labels = self._labels.iloc[:, index].astype(np.float32)
         max_label = np.amax(labels)
         min_label = np.amin(labels)
         delta_labels = max_label - min_label + 1
         colourBarOn = True if delta_labels <= 30 else False
 
         ax = fig.add_subplot(rows, cols, index + 1)
-        im = ax.scatter(self._result[:, 0], self._result[:, 1], c= self._labels.iloc[:, index], cmap = 'Spectral', s = 5)
+        im = ax.scatter(self._result[:, 0], self._result[:, 1], c= self._labels.iloc[:, index].astype(np.float32), cmap = 'Spectral', s = 5)
         if colourBarOn:
             fig.colorbar(im, boundaries = np.arange(min_label, max_label + 2) - 0.5, ax = ax).set_ticks(np.arange(min_label, max_label + 2))
         ax.set_title(self._labels.columns[index])
         plt.gca().set_aspect('equal', 'datalim')
 
     def __plot_result_3d(self, fig, rows, cols, index):
-        labels = self._labels.iloc[:, index]
+        labels = self._labels.iloc[:, index].astype(np.float32)
         max_label = np.amax(labels)
         min_label = np.amin(labels)
         delta_labels = max_label - min_label + 1
         colourBarOn = True if delta_labels <= 30 else False
 
         ax = fig.add_subplot(rows, cols, index + 1, projection='3d')
-        im = ax.scatter(self._result[:, 0], self._result[:, 1], self._result[:, 2], c = self._labels.iloc[:, index].values, cmap = 'Spectral', s = 5)
+        im = ax.scatter(self._result[:, 0], self._result[:, 1], self._result[:, 2], c = self._labels.iloc[:, index].astype(np.float32), cmap = 'Spectral', s = 5)
         
         if colourBarOn:
             fig.colorbar(im, boundaries = np.arange(delta_labels + 1) - 0.5, ax = ax).set_ticks(np.arange(delta_labels))
@@ -215,6 +218,8 @@ class Visualiser():
         for i in range(numPlots):
             plot_func(fig, rows, cols, i)
         plt.show()
+
+        return fig
 
     def visualise(self):
         self.fit_transform()

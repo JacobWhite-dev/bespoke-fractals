@@ -2,7 +2,7 @@
 """
 Finite measurement module for MRI data
 
-Created on Tue Sep 27 13:57:13 2016
+Created on Tuels Sep 27 13:57:13 2016
 
 @author: uqscha22
 """

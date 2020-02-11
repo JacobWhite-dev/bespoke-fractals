@@ -44,18 +44,15 @@ class Visualiser():
     representing the value of a given label, e.g.
 
     ____ | height | weight | sex  | ...  | GPA
-    pt 0 | 0.11   | 1.34   | 0    | ...  | 4.55
-    pt 1 | 5.67   | 4.55   | 1    | ...  | 6.77
+    pt 0 | 0.11   | 1.34   | M    | ...  | 4.55
+    pt 1 | 5.67   | 4.55   | F    | ...  | 6.77
     ...  | ...    | ...    | ...  | ...  | ...
-    pt N | 2.56   | 1.11   | 1    | ...  | 1.23
+    pt N | 2.56   | 1.11   | F    | ...  | 1.23
 
     Note that unlike in the data DataFrame, the column headers do matter
     as they are used to generate the titles for any plots. Note also that the
     order of rows should match that of the data DataFrame. Finally, labels may
-    be continuous, real numbers (as in the height column above) or integers
-    (as in the sex column above); however, they MUST BE NUMBERS. Thus, 
-    a qualitative label such as handedness, which we would normally label as
-    either left or right, must be labelled as 0 or 1. 
+    be numerical or strings (as in the sex column above).
 
     Reducer:
     The reducer is the object that will be used to perform the dimensionality
@@ -168,16 +165,39 @@ class Visualiser():
 
     def __plot_result_2d(self, fig, rows, cols, index):
         # Get labels for plot
-        labels = self._labels.iloc[:, index].astype(np.float32)
-        max_label = np.amax(labels)
-        min_label = np.amin(labels)
-        delta_labels = max_label - min_label + 1
-        colourBarOn = True if delta_labels <= 30 else False
+        labels = self._labels.iloc[:, index]
+
+        is_numeric = True
+
+        try:
+            labels = labels.astype(float)
+        except:
+            is_numeric = False
+
+        if is_numeric:
+            print("Numeric")
+            max_label = np.amax(labels)
+            min_label = np.amin(labels)
+            delta_labels = max_label - min_label + 1
+            c = self._labels.iloc[:, index].astype(np.float32)
+            boundaries = np.arange(delta_labels + 1) - 0.5
+            ticks = np.arange(delta_labels)
+        else:
+            print("Non-numeric")
+            unique = labels.unique()
+            c = np.array([int((unique == label)[0]) for label in labels])
+            boundaries = np.arange(unique.size + 1) - 0.5
+            ticks = np.arange(unique.size + 1)
+
+        colourBarOn = True
 
         ax = fig.add_subplot(rows, cols, index + 1)
-        im = ax.scatter(self._result[:, 0], self._result[:, 1], c= self._labels.iloc[:, index].astype(np.float32), cmap = 'Spectral', s = 5)
+        im = ax.scatter(self._result[:, 0], self._result[:, 1], c= c, cmap = 'Spectral', s = 5)
         if colourBarOn:
-            fig.colorbar(im, boundaries = np.arange(min_label, max_label + 2) - 0.5, ax = ax).set_ticks(np.arange(min_label, max_label + 2))
+            cbar = fig.colorbar(im, boundaries = boundaries, ax = ax)
+            cbar.set_ticks(ticks)
+            if not is_numeric:
+                cbar.set_ticklabels(unique)
         ax.set_title(self._labels.columns[index])
         plt.gca().set_aspect('equal', 'datalim')
 

@@ -6,6 +6,7 @@ import umap
 import numpy as np
 from vaeumap import VAEUMAP
 from metrics import fast_bhattacharyya_mvn
+from tabulate import tabulate
 
 # Loading data
 data = pd.read_csv('code.csv', header = None, usecols = [i for i in range(1, 513)])
@@ -31,16 +32,17 @@ print(labels)
 
 # Visualise
 dim = 256
+
 reducer = VAEUMAP(dim, random_state = 2, n_components = 2, verbose = True)
 visualiser = vis.Visualiser(data, labels, reducer)
 #visualiser.fit_transform()
 visualiser.visualise()
 
 # Identifying small blob (x is greater than 10 on all)
-result = visualiser.get_result()
-pts = np.argwhere(result[:, 0] > 10)
-print(pts)
-print(filenames[pts])
+#result = visualiser.get_result()
+#pts = np.argwhere(result[:, 0] > 10)
+#print(pts)
+#print(filenames[pts])
 
 
 

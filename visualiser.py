@@ -157,6 +157,29 @@ class Visualiser():
     def fit_transform(self):
         self._result = self._reducer.fit_transform(self._data)
 
+    # def process_labels(self):
+    #     is_numeric = True
+
+    #     try:
+    #         labels = labels.astype(float)
+    #     except:
+    #         is_numeric = False
+
+    #     if is_numeric:
+    #         #print("Numeric")
+    #         max_label = np.amax(labels)
+    #         min_label = np.amin(labels)
+    #         delta_labels = max_label - min_label + 1
+    #         c = self._labels.iloc[:, index].astype(np.float32)
+    #         boundaries = np.arange(delta_labels + 1) - 0.5
+    #         ticks = np.arange(delta_labels)
+    #     else:
+    #         #print("Non-numeric")
+    #         unique = labels.unique()
+    #         c = np.array([int((unique == label)[0]) for label in labels])
+    #         boundaries = np.arange(unique.size + 1) - 0.5
+    #         ticks = np.arange(unique.size + 1)
+
     def __plot_result_1d(self, fig, rows, cols, index):
         points = np.size(self._result)
 

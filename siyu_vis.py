@@ -9,8 +9,9 @@ from metrics import fast_bhattacharyya_mvn
 from tabulate import tabulate
 
 # Loading data
-data = pd.read_csv('code.csv', header = None, usecols = [i for i in range(1, 513)])
-data[256:] = data[256:].applymap(lambda x: x * x)
+data = pd.read_csv('code.csv', header = None, usecols = [i for i in range(1, 256)])
+#data[256:] = data[256:].applymap(lambda x: x * x)
+#data = data[:256]
 filenames_df = pd.read_csv('code.csv', header = None, usecols = [0])
 filenames = filenames_df.values[:, 0]
 
@@ -30,19 +31,27 @@ for file in filenames:
 labels = pd.DataFrame(data = labels)
 print(labels)
 
+# Shuffle data
+#perm = np.random.permutation(data.values.shape[0])
+#data = pd.DataFrame(data = data.values[perm, :], columns = data.columns)
+#labels = pd.DataFrame(data = labels.values[perm, :], columns = labels.columns)
+
 # Visualise
 dim = 256
 
-reducer = VAEUMAP(dim, random_state = 2, n_components = 2, verbose = True)
+#reducer = VAEUMAP(dim, random_state = 2, n_components = 2, verbose = True)
+reducer = umap.UMAP(random_state = 2, n_components = 2, verbose = True)
 visualiser = vis.Visualiser(data, labels, reducer)
 #visualiser.fit_transform()
 visualiser.visualise()
 
+
+
 # Identifying small blob (x is greater than 10 on all)
-#result = visualiser.get_result()
-#pts = np.argwhere(result[:, 0] > 10)
-#print(pts)
-#print(filenames[pts])
+result = visualiser.get_result()
+pts = np.argwhere(result[:, 0] > 10)
+print(pts)
+print(filenames[pts])
 
 
 

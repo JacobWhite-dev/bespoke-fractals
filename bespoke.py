@@ -18,10 +18,11 @@ import radon
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import random
 import scipy.fftpack as fftpack
 import pyfftw
 
-#np.seterr(divide='ignore', invalid='ignore') # Skip dividing by zero
+np.seterr(divide='ignore', invalid='ignore') # Skip dividing by zero
 
 ## Monkey patch in fftn and ifftn from pyfftw.interfaces.scipy_fftpack
 #fftpack.fft2 = pyfftw.interfaces.scipy_fftpack.fft2
@@ -288,6 +289,9 @@ def hex(p, q):
 
     a = (x1 * y3 - x3 * y1 + x3 * y2 - x2 * y3) / (x1 * y2 - x2 * y1)
     return a
+
+def rando(p, q):
+    return random.randint(0,1)
 
 def ellipse(p, q):
     return math.pow((p - 2 * q), 2) + p * q

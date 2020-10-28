@@ -160,7 +160,7 @@ class Farey:
 
         p3 = math.floor( (q1+n) / float(q2) )*p2 - p1
         q3 = math.floor( (q1+n) / float(q2) )*q2 - q1
-        
+
         return farey(p3, q3)
        
     def nextCompactFarey(self, n, vec1, vec2):

@@ -1,5 +1,4 @@
 '''
-
 Created on Wed Jan 8 2020
 
 @author: uqjwhi35
@@ -20,7 +19,9 @@ import matplotlib.pyplot as plt
 import math
 import random
 import scipy.fftpack as fftpack
-import pyfftw
+#import pyfftw
+import sympy
+import functools
 
 np.seterr(divide='ignore', invalid='ignore') # Skip dividing by zero
 
@@ -44,6 +45,31 @@ np.seterr(divide='ignore', invalid='ignore') # Skip dividing by zero
 
 #kspace = np.zeros((N, N))
 
+def is_gaussian_prime(vector):
+    a = int(np.real(vector))
+    b = int(np.imag(vector))
+    print(a, b)
+    # Check if one is zero and abs of other is prime of the form 4n + 3
+    if a == 0:
+        if sympy.ntheory.primetest.isprime(b) and abs(b) % 4 == 3:
+            return True
+        else:
+            return False
+
+    if b == 0:
+        if sympy.ntheory.primetest.isprime(a) and abs(a) % 4 == 3:
+            return True
+        else:
+            return False
+
+    if sympy.ntheory.primetest.isprime(a * a + b * b):
+        return True
+    else:
+        return False
+
+def is_not_gaussian_prime(vector):
+    return not is_gaussian_prime(vector)
+
 def P2R(radii, angles):
     angles = angles * 2 * math.pi / 360
     return radii * np.exp(1j*angles)
@@ -52,7 +78,7 @@ def rotate(angle, point):
     rotMat = np.array([[math.cos(angle), -math.sin(angle)], [math.sin(angle), math.cos(angle)]])
     return np.matmul(rotMat, point)
 
-def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, centered=False):
+def myFiniteFractalSpiral(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, centered=False):
     '''
     Create the finite fractal for image size N given the Katz criterion K
     
@@ -72,9 +98,88 @@ def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, 
     vecs_2q = [farey.farey(-np.imag(vec), np.real(vec)) for vec in vecs]
     fareyVectors.vectors.extend(vecs_2q)
     fareyVectors.generateFinite(N)
+
+    #fareyVectors.vectors = filter(is_gaussian_prime, fareyVectors.vectors)
     
     #sort to reorder result for prettier printing
     finiteAnglesSorted, anglesSorted = fareyVectors.sortCustom(sortBy)
+    #finiteAnglesSorted = [finiteAnglesSorted[20]]
+    #anglesSorted = [anglesSorted[20]]
+
+    
+    ## Rotate the whole fractal
+    #anglesSorted = [angle * P2R(1, 63) for angle in anglesSorted]
+    #for index in range(len(anglesSorted)):
+    #    angle = anglesSorted[index]
+    #    p = np.imag(angle)
+    #    q = np.real(angle)
+    #    p = p + N if p < 0 else p
+    #    q = q + N if q < 0 else q
+
+    #    anglesSorted[index] = q + 1j * p
+
+    #print(anglesSorted)
+ 
+    #finiteAnglesSorted = [farey.toFinite(angle, N) for angle in anglesSorted]
+
+    kSpace = np.zeros((N,N))
+    #lines, angles, mValues = finite.computeKatzLines(kSpace, anglesSorted, finiteAnglesSorted, K, centered, twoQuads = False)
+    #mu = len(lines)
+    #print("Number of finite lines in fractal:", mu)
+    lines = 0
+    mValues = 0
+    
+    print(anglesSorted)
+    numAngles = len(anglesSorted)
+    angles = anglesSorted[0:numAngles // 3]
+
+    samplesImage1 = np.zeros((N,N), np.float32)
+    
+    for i in range(N):
+        for angle in angles:
+            proj = np.power((1 + 1j), i) * angle
+            samplesImage1[int(np.real(proj)) % N, int(np.imag(proj)) % N] = 1
+
+    #determine oversampling because of power of two size
+    #this is fixed for choice of M and m values
+    oversamplingFilter = np.zeros((N,N), np.uint32)
+    #onesSlice = np.ones(N, np.uint32)
+    #for m in mValues:
+        #radon.setSlice(m, oversamplingFilter, onesSlice, 2)
+    #oversamplingFilter[oversamplingFilter==0] = 1
+    #samplesImage1 /= oversamplingFilter
+#    samplesImage1 = fftpack.fftshift(samplesImage1)
+    
+    return lines, angles, mValues, samplesImage1, oversamplingFilter
+
+def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, centered=False, pure = False):
+    '''
+    Create the finite fractal for image size N given the Katz criterion K
+    
+    sortBy can be 'Euclidean' for L2 norm or 'length' for L1 norm
+    twoQuads can be used to cover the half plane
+    
+    Returns lines, angles, mValues, fractal formed (as an image), oversampling filter if applicable
+    '''
+    fareyVectors = farey.Farey()        
+    fareyVectors.compactOn()
+    fareyVectors.generateFiniteWithCoverage(N)
+    #plt.scatter(np.real(fareyVectors.vectors), np.imag(fareyVectors.vectors))
+    #plt.show()
+    #fareyVectors.generateFinite(N)
+    #print(fareyVectors.vectors)
+    vecs = fareyVectors.vectors
+    vecs_2q = [farey.farey(-np.imag(vec), np.real(vec)) for vec in vecs]
+    fareyVectors.vectors.extend(vecs_2q)
+    fareyVectors.generateFinite(N)
+
+    #fareyVectors.vectors = filter(is_gaussian_prime, fareyVectors.vectors)
+    
+    #sort to reorder result for prettier printing
+    finiteAnglesSorted, anglesSorted = fareyVectors.sortCustom(sortBy)
+    #finiteAnglesSorted = [finiteAnglesSorted[20]]
+    #anglesSorted = [anglesSorted[20]]
+
     
     ## Rotate the whole fractal
     #anglesSorted = [angle * P2R(1, 63) for angle in anglesSorted]
@@ -101,7 +206,7 @@ def myFiniteFractal(N, K, sortBy = lambda p,q : abs(p) + abs(q), twoQuads=True, 
         u, v = line
 
         for x, y in zip(u, v):
-            
+
             # Rotate
             #[x, y] = rotate(30, np.array([[x], [y]]))
             #x = int(x) % N

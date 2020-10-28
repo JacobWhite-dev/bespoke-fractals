@@ -104,16 +104,16 @@ def idrt(bins, p, norm = True):
 #-------------
 #fast versions with FFTs and NTTs
 import scipy.fftpack as fftpack
-import pyfftw
+#import pyfftw
 
 # Monkey patch in fftn and ifftn from pyfftw.interfaces.scipy_fftpack
-fftpack.fft2 = pyfftw.interfaces.scipy_fftpack.fft2
-fftpack.ifft2 = pyfftw.interfaces.scipy_fftpack.ifft2
-fftpack.fft = pyfftw.interfaces.scipy_fftpack.fft
-fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
+#fftpack.fft2 = pyfftw.interfaces.scipy_fftpack.fft2
+#fftpack.ifft2 = pyfftw.interfaces.scipy_fftpack.ifft2
+#fftpack.fft = pyfftw.interfaces.scipy_fftpack.fft
+#fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
 
 # Turn on the cache for optimum performance
-pyfftw.interfaces.cache.enable()
+#pyfftw.interfaces.cache.enable()
 
 def frt(image, N, dtype=np.float64, center=False):
     '''

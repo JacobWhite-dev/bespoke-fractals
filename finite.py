@@ -10,18 +10,19 @@ import radon
 import farey #local module
 from scipy import ndimage
 import scipy.fftpack as fftpack
-import pyfftw
+#import pyfftw
 import numpy as np
 import math
+from matplotlib import pyplot as plt
 
 # Monkey patch in fftn and ifftn from pyfftw.interfaces.scipy_fftpack
-fftpack.fft2 = pyfftw.interfaces.scipy_fftpack.fft2
-fftpack.ifft2 = pyfftw.interfaces.scipy_fftpack.ifft2
-fftpack.fft = pyfftw.interfaces.scipy_fftpack.fft
-fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
+#fftpack.fft2 = pyfftw.interfaces.scipy_fftpack.fft2
+#fftpack.ifft2 = pyfftw.interfaces.scipy_fftpack.ifft2
+#fftpack.fft = pyfftw.interfaces.scipy_fftpack.fft
+#fftpack.ifft = pyfftw.interfaces.scipy_fftpack.ifft
 
 # Turn on the cache for optimum performance
-pyfftw.interfaces.cache.enable()
+#pyfftw.interfaces.cache.enable()
 
 def isKatzCriterion(P, Q, angles, K = 1):
     '''
@@ -207,11 +208,51 @@ def finiteFractal(N, K, sortBy='Euclidean', twoQuads=True, centered=False):
     mu = len(lines)
     print("Number of finite lines in fractal:", mu)
     
+    #i = 0
     samplesImage1 = np.zeros((N,N), np.float32)
-    for line in lines:
-        u, v = line
-        for x, y in zip(u, v):
-            samplesImage1[x, y] += 1
+
+    print(angles)
+
+    for i  in range(0, N-1):
+        for angle in angles:
+            #print(line)
+            samplesImage1[int((np.real(angle) * i)) % N, (int(np.imag(angle) * i)) % N] = 1
+            samplesImage1[int((np.real(angle) * -i)) % N, (int(np.imag(angle) * -i)) % N] = 1
+
+
+
+    #for line in lines:
+    #    u, v = line
+    #    for x, y in zip(u, v):
+    #        samplesImage1[x, y] += 1
+        
+        # NEW BIT
+        # a colormap and a normalization instance
+        cmap = plt.cm.gray
+        norm = plt.Normalize(vmin=samplesImage1.min(), vmax=samplesImage1.max())
+
+        # map the normalized data to colors
+        # image is now RGBA (512x512x4) 
+        image = cmap(norm(fftpack.fftshift(samplesImage1)))
+
+        # save the image
+        #plt.imsave("tmp{}.png".format(i), image)
+
+        #plt.imshow(fftpack.fftshift(samplesImage1), cmap = 'gray')
+        #plt.tick_params(
+        #    axis='both',          # changes apply to the x-axis
+        #    which='both',      # both major and minor ticks are affected
+        #    bottom=False,      # ticks along the bottom edge are off
+        #    top=False,         # ticks along the top edge are off
+        #    labelbottom=False) # labels along the bottom edge are off
+        #plt.show()
+        #samplesImage1 = np.zeros((N,N), np.float32)
+
+        #i += 1
+
+    #plt.imshow(fftpack.fftshift(samplesImage1), cmap = 'gray')
+    #plt.show()
+
     #determine oversampling because of power of two size
     #this is fixed for choice of M and m values
     oversamplingFilter = np.zeros((N,N), np.uint32)
